@@ -125,6 +125,9 @@ public class Player_Move : MonoBehaviour
             }
             var s = Vector3.Distance(player.transform.position, movevec);
             animator.SetFloat("Speed", s);
+
+            var y = Getpos().y;
+            if (y == 6) { gameManager.Result(true); }
         }
     }
 
@@ -146,6 +149,17 @@ public class Player_Move : MonoBehaviour
         {
             return tile.GetTile<TileBase>(p);
         }
+
+        if (gameManager.goolobj_)
+        {
+            tile = gameManager.useGooltile;
+            p = tile.WorldToCell(Getpos() + t);
+            if (tile.HasTile(p))
+            {
+                return tile.GetTile<TileBase>(p);
+            }
+        }
+        
 
         return null;
     }
@@ -175,6 +189,7 @@ public class Player_Move : MonoBehaviour
         if (t != null) {
             if (t.name == "gold") {
                 GetGold++;
+                gameManager.GoldGet();
                 gameManager.usemovetile.SetTile(GetTilepos(new Vector2()), null);
             }
         }
