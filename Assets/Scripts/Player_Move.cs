@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,13 +10,13 @@ public class Player_Move : MonoBehaviour
     [SerializeField] GameManager_script gameManager;
     [SerializeField] float speed;
     [SerializeField] float FallSpeed;
+    [SerializeField] float DigSpeed;
     [SerializeField] Animator animator;
     [SerializeField] SpriteRenderer spriteRenderer;
-    Rigidbody2D rb;
     Vector2 inputvec;
     bool CanMove = true;
     Vector3 movevec;
-    Vector2 Beforepos;
+    public int GetGold { private set; get; } = 0;
     enum St
     {
         Idle,Move,Fall,Radder,Bar,Dig
@@ -23,7 +24,6 @@ public class Player_Move : MonoBehaviour
     St PlayerState = St.Idle;
     private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
@@ -63,10 +63,20 @@ public class Player_Move : MonoBehaviour
             }
         }
     }
+
+    void OnZ(InputValue input)
+    {
+        Dig(new Vector2(-1,-1));
+    }
+    void OnC(InputValue input)
+    {
+        Dig(new Vector2(1, -1));
+    }
     private void Update()
     {
         if (!CanMove) {
-            if (transform.position == movevec) {
+            if (PlayerState == St.Dig) { Debug.Log("Dig"); }
+            else if (transform.position == movevec) {
                 PlayerState = St.Idle;
                 animator.SetBool("InRadder", false);
                 animator.SetBool("InBar", false);
@@ -93,6 +103,7 @@ public class Player_Move : MonoBehaviour
             if (PlayerState == St.Fall) transform.position = Vector3.MoveTowards(player.transform.position, movevec, FallSpeed * Time.deltaTime);
             else transform.position = Vector3.MoveTowards(player.transform.position, movevec, speed * Time.deltaTime);
 
+            //------  アニメーション  ------
             if (PlayerState == St.Move)
             {
 
@@ -138,24 +149,39 @@ public class Player_Move : MonoBehaviour
 
         return null;
     }
+    public Vector3Int GetTilepos(Vector2 t)//タイルのポジション取得
+    {
+        var tile = gameManager.useblocktile;
+        var p = tile.WorldToCell(Getpos() + t);
+        return p;
+    }
 
-    
+
     public bool ChackMove(TileBase b)//動けるかタイルの種類をチェック
     {
         if(b == null){
             return true;
         }
-        if (b.name == "block0"){
-            return false;
+        if (b.name == "bar" || b.name == "radder" || b.name == "block6" || b.name == "gold")
+        {
+            return true;
         }
-        return true;
+        return false;
     }
 
     public bool LateCheckMove()//動いた後のチェック
     {
-        var t = CheckTile(new Vector2(0, -1));
+        var t = CheckTile(new Vector2());
+        if (t != null) {
+            if (t.name == "gold") {
+                GetGold++;
+                gameManager.usemovetile.SetTile(GetTilepos(new Vector2()), null);
+            }
+        }
+
+        t = CheckTile(new Vector2(0, -1));
         //下に何もないとき
-        if (t == null)
+        if (t == null||t.name == "block6")
         {
             t = CheckTile(new Vector2());
             //playerの位置にとどまれるものがあるか
@@ -187,5 +213,73 @@ public class Player_Move : MonoBehaviour
         }
         x++;
         return new Vector3(0,x,0);
+    }
+
+    void Dig(Vector2 side)//掘るか決める関数
+    {
+        if (CanMove)
+        {
+            var t = CheckTile(side);
+            if (t != null)
+            {
+                if (t.name == "block1")
+                {
+                    PlayerState = St.Dig;
+                    CanMove = false;
+                    StartCoroutine(DigMove(side));
+                }
+            }
+        }
+    }
+
+    IEnumerator DigMove(Vector2 side)//掘るコルーチン
+    {
+        yield return StartCoroutine(Enumerator(side));
+        animator.SetBool("InDig", false);
+        PlayerState = St.Idle;
+        CanMove = true;
+        StartCoroutine(Fill(side));
+        yield return null;
+    }
+    IEnumerator Enumerator(Vector2 side) {
+        var pos = GetTilepos(side);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock2);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock3);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock4);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock5);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock6);
+        yield return new WaitForSeconds(DigSpeed);
+    }
+    IEnumerator Fill(Vector2 side)  //埋めるコルーチン
+    {
+        var pos = GetTilepos(side);
+        for (int i = 0; i < 5; i++) {
+            yield return new WaitForSeconds(1);
+        }
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock5);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock4);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock3);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock2);
+        yield return new WaitForSeconds(DigSpeed);
+        gameManager.useblocktile.SetTile(pos, gameManager.data.Brock1);
+        yield return new WaitForSeconds(DigSpeed);
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.collider.tag == "TileMap")
+        {
+            Debug.Log("co");
+            var i = Getpos();
+            Vector3Int pos = new Vector3Int((int)i.x, (int)i.y + 1, 0);
+            transform.position = pos;
+        }
     }
 }
