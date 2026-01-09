@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 927865c27447e134bb33940386e77353, type: 3}
+  m_Name: TileData
+  m_EditorClassIdentifier: 
+  Brock0: {fileID: 11400000, guid: 581232c2b5e55dd4c8f0d0de5adba8c3, type: 2}
+  Brock1: {fileID: 11400000, guid: 89e707467aa8e4a4785f1073894c73bc, type: 2}
+  Brock2: {fileID: 11400000, guid: 5f87f90ee9ea6bf449a69a15ad18b706, type: 2}
+  Brock3: {fileID: 11400000, guid: 7789c47c4738e43479fbf56453bc7ad2, type: 2}
+  Brock4: {fileID: 11400000, guid: 3796c674057c056469d957ba0a0e25c1, type: 2}
+  Brock5: {fileID: 11400000, guid: f4625e2e8c08dde41811ba1aee59e7d3, type: 2}
+  Brock6: {fileID: 11400000, guid: 9bb52d9fc4c01d848bd63502e0807aac, type: 2}
+  Gold: {fileID: 11400000, guid: db9875cd917769948ab4d5429aa86272, type: 2}
+  Bar: {fileID: 11400000, guid: 1d19b4a7ad9b2d44b90fb67555de68cd, type: 2}
+  Radder: {fileID: 11400000, guid: 583b21c7a0095bf438f4bff6cfdd5589, type: 2}
